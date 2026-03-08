@@ -8,7 +8,7 @@
   <link type="text/css" rel="stylesheet" href="main.css">
   <link type="image/png" rel="icon" href="icon.png">
 
-  <title>OpenDS</title>
+  <title>OpenDS.ai</title>
 
   <script type="text/javascript">
     window.onload = function() {
@@ -21,7 +21,7 @@
 
     function script_dl() {
       var isWin = navigator.platform.toLowerCase().includes("win");
-      var url = "https://api.github.com/repos/Boomaa23/open-ds/contents/ods-" + (isWin ? "win32.cmd" : "unix.sh");
+      var url = "https://api.github.com/repos/horner/open-ds.ai/contents/ods-" + (isWin ? "win32.cmd" : "unix.sh");
       var request = new XMLHttpRequest();
       request.open("GET", url, false);
       request.send();
@@ -36,7 +36,7 @@
     }
 
     function jar_dl() {
-      var url = "https://api.github.com/repos/Boomaa23/open-ds/releases/latest";
+      var url = "https://api.github.com/repos/horner/open-ds.ai/releases/latest";
       var request = new XMLHttpRequest();
       request.open("GET", url, false);
       request.send();
@@ -50,9 +50,9 @@
     }
     
     function dl_fail() {
-      console.error("Could not download OpenDS. Attempting to redirect to the GitHub repo.");
-        if (window.confirm("Could not download OpenDS. Redirect to the GitHub repo?")) {
-          window.location.href = "https://github.com/Boomaa23/open-ds/releases/latest";
+      console.error("Could not download OpenDS.ai. Attempting to redirect to the GitHub repo.");
+        if (window.confirm("Could not download OpenDS.ai. Redirect to the GitHub repo?")) {
+          window.location.href = "https://github.com/horner/open-ds.ai/releases/latest";
         }
     }
   </script>
@@ -63,6 +63,7 @@
       <li class="logo"><a href="#home"><img src="icon-min.png" height="32px"></a></li>
       <li class="nonlogo"><a href="#download">Download</a></li>
       <li class="nonlogo"><a href="#features">Features</a></li>
+      <li class="nonlogo"><a href="#mcp">MCP</a></li>
       <li class="nonlogo"><a href="#params">Parameters</a></li>
       <li class="nonlogo"><a href="#source">Source</a></li>
       <li class="nonlogo"><a href="#build">Build</a></li>
@@ -74,8 +75,8 @@
 
   <div class="submenu">
     <a class="anchor" id="home"></a>
-    <div class="header">OpenDS</div>
-    <p style="text-align: center">A reverse-engineered lightweight FRC Driver Station alternative for Windows, Linux, and macOS.</p>
+    <div class="header">OpenDS.ai</div>
+    <p style="text-align: center">A fork of <a href="https://github.com/Boomaa23/open-ds" target="_blank">OpenDS</a> — a reverse-engineered lightweight FRC Driver Station alternative for Windows, Linux, and macOS — extended with a virtual gamepad controller and a built-in MCP server for AI assistant integration.</p>
     <div class="content-item download">
       <a class="anchor" id="download"></a>
       <div class="subheader">Download</div>
@@ -90,17 +91,17 @@
       <div id="run-scripts"></div>
       <p>If you do not have Java and/or want a single install/run script, download
         <a id="script-dl" href="#" onclick="script_dl()">this script</a> 
-        instead and use it to start OpenDS. Use the same script to re-launch OpenDS.</p>
+        instead and use it to start OpenDS.ai. Use the same script to re-launch OpenDS.ai.</p>
     </div>
     <div class="content-item features">
       <a class="anchor" id="features"></a>
       <div class="subheader">Features</div>
-      <p>OpenDS is a fully functional FIRST Robotics Competition (FRC) Driver Station alternative for Windows, Linux, and macOS systems.
-        All the features of the official Driver Station are implemented in OpenDS, meaning teams can use it in the place of the official
+      <p>OpenDS.ai is a fully functional FIRST Robotics Competition (FRC) Driver Station alternative for Windows, Linux, and macOS systems.
+        All the features of the official Driver Station are implemented in OpenDS.ai, meaning teams can use it in the place of the official
         Driver Station when testing robot features away from the competition.</p>
-      <p>OpenDS is extremely lightweight (about 1 MB) and does not require an installation of any kind, unlike the official
+      <p>OpenDS.ai is extremely lightweight (about 1 MB) and does not require an installation of any kind, unlike the official
         Driver Station which has a lengthy installation process and heavy install footprint.</p>
-      <p><b>NOTE</b>: OpenDS may not be used during FRC-legal competitions as per rules R710 and R901 (previously R66 and R88). OpenDS is intended for testing use only.</p>
+      <p><b>NOTE</b>: OpenDS.ai may not be used during FRC-legal competitions as per rules R710 and R901 (previously R66 and R88). OpenDS.ai is intended for testing use only.</p>
 
       <ul>
         <li>Robot<ul>
@@ -110,6 +111,7 @@
           <li>Send game data</li>
           <li>Change team number</li>
           <li>USB Joystick and Xbox controller input support</li>
+          <li>Virtual Gamepad (on-screen controller, no hardware required)</li>
           <li>Restart robot code and RoboRIO</li>
           <li>Emergency stop</li>
         </ul></li>
@@ -137,8 +139,20 @@
           <li>No install prerequisites</li>
           <li>Easily modifiable for updated protocol years</li>
           <li>Command-line (CLI) parameters</li>
-        </ul>
+        </ul></li>
+        <li>MCP Server<ul>
+          <li>Built-in Model Context Protocol (MCP) server on port 8765</li>
+          <li>Read-only robot status tools for AI assistants</li>
+          <li>Compatible with VS Code, Claude Desktop, and any MCP client</li>
+        </ul></li>
       </ul>
+    </div>
+    <div class="content-item mcp">
+      <a class="anchor" id="mcp"></a>
+      <div class="subheader">MCP Server</div>
+      <p>OpenDS.ai includes a built-in <a href="MCP.md" target="_blank">Model Context Protocol (MCP) server</a> that exposes read-only robot status data over HTTP (Streamable HTTP transport, port 8765 by default).</p>
+      <p>Available tools: <span class="code">get_robot_status</span>, <span class="code">get_battery_voltage</span>, <span class="code">get_robot_stats</span>, <span class="code">get_connection_info</span>, <span class="code">get_match_info</span>.</p>
+      <p>See <a href="MCP.md" target="_blank">MCP.md</a> for full setup instructions for VS Code and Claude Desktop.</p>
     </div>
     <div class="content-item params">
       <a class="anchor" id="params"></a>
@@ -232,35 +246,47 @@
           <td>Boolean</td>
           <td></td>
         </tr>
+        <tr>
+          <td>Disable MCP Server</td>
+          <td>--disable-mcp</td>
+          <td>Boolean</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>MCP Server Port</td>
+          <td>--mcp-port</td>
+          <td>Integer</td>
+          <td></td>
+        </tr>
       </table>
     </div>
     <div class="content-item source">
       <a class="anchor" id="source"></a>
       <div class="subheader">Source</div>
-      <p>The source code for OpenDS is available on GitHub at <a href="https://github.com/Boomaa23/open-ds">https://github.com/Boomaa23/open-ds</a>.
-      <p>OpenDS may be used without restriction for the purpose of testing robots by teams and individuals. Please see <a href="https://github.com/Boomaa23/open-ds/blob/master/LICENSE.txt">the license</a> for further uses.</p>
-      <p>If you find a bug or issue with OpenDS, please report it on the "Issues" section of the GitHub <a href="https://github.com/Boomaa23/open-ds/issues">here</a>.</p>
-      <p>For protocol changes in future years, OpenDS is easily modifiable. Ports, IP addresses, display layouts, and packet creation/parsing are all re-formattable.</p>
+      <p>The source code for OpenDS.ai is available on GitHub at <a href="https://github.com/horner/open-ds.ai">https://github.com/horner/open-ds.ai</a>.
+      <p>OpenDS.ai may be used without restriction for the purpose of testing robots by teams and individuals. Please see <a href="https://github.com/horner/open-ds.ai/blob/master/LICENSE.txt">the license</a> for further uses.</p>
+      <p>If you find a bug or issue with OpenDS.ai, please report it on the "Issues" section of the GitHub <a href="https://github.com/horner/open-ds.ai/issues">here</a>.</p>
+      <p>For protocol changes in future years, OpenDS.ai is easily modifiable. Ports, IP addresses, display layouts, and packet creation/parsing are all re-formattable.</p>
 
       <p>There are three main classes that need to be implemented for a new protocol year:</p>
       <ul>
         <li>PacketParser<ul>
           <li>Package: <span class="code">com.boomaa.opends.data.receive.parser</span>
-          <li>Example: <a href="https://github.com/Boomaa23/open-ds/blob/master/src/main/java/com/boomaa/opends/data/receive/parser/Parser2020.java">Parser2020</a>
+          <li>Example: <a href="https://github.com/horner/open-ds.ai/blob/master/src/main/java/com/boomaa/opends/data/receive/parser/Parser2020.java">Parser2020</a>
           <li>Description: Parses received packet data that is not contained within tags (e.g. standard data across all packets of that type)
           <li>Implementation: Create four classes that extend the above class, one for each connection (e.g. TCP and UDP for RoboRIO and FMS).
               Make all four classes sub-classes of a single class <span class="code">Parser20XX</span> with the same naming scheme found in the example.
         </ul></li>
         <li>PacketCreator<ul>
           <li>Package: <span class="code">com.boomaa.opends.data.send.creator</span>
-          <li>Example: <a href="https://github.com/Boomaa23/open-ds/blob/master/src/main/java/com/boomaa/opends/data/send/creator/Creator2020.java">Creator2020</a>
+          <li>Example: <a href="https://github.com/horner/open-ds.ai/blob/master/src/main/java/com/boomaa/opends/data/send/creator/Creator2020.java">Creator2020</a>
           <li>Description: Creates packets to send to the RoboRIO or FMS based on GUI inputs and other status sources.
           <li>Implementation: Create four methods in a single class. Make the class extend the abstract class <span class="code">PacketCreator</span>,
               and implement all the methods. This is a good place to access GUI data through the JDEC.
         </ul></li>
         <li>ElementUpdater<ul>
           <li>Package: <span class="code">com.boomaa.opends.display.updater</span>
-          <li>Example: <a href="https://github.com/Boomaa23/open-ds/blob/master/src/main/java/com/boomaa/opends/display/updater/Updater2020.java">Updater2020</a>
+          <li>Example: <a href="https://github.com/horner/open-ds.ai/blob/master/src/main/java/com/boomaa/opends/display/updater/Updater2020.java">Updater2020</a>
           <li>Description: Updates the previously positioned GUI elements with data from the parsers.
           <li>Implementation: Make a new class that extends the abstract class <span class="code">ElementUpdater</span>. This will contain methods to update the GUI from each
               packet stream, and methods to reset the elements should connection to the remote (RoboRIO/FMS) stop.
@@ -294,15 +320,17 @@
         You can also launch with debug (<span class="code">--debug</span>) to print more information to the console.</p>
       <p>If you are using the WPILib simulator (instead of a physical robot), ensure you have the following line in your <span class="code">build.gradle</span> (or equivalent in <span class="code">build.gradle.kts</span>).</p>
       <p><blockquote><span class="code">wpi.sim.addDriverstation().defaultEnabled = true</span></blockquote></p>
-      <p>If issues persist, please report them on the "Issues" section of the GitHub <a href="https://github.com/Boomaa23/open-ds/issues">here</a>
+      <p>If issues persist, please report them on the "Issues" section of the GitHub <a href="https://github.com/horner/open-ds.ai/issues">here</a>
         and they will be resolved as soon as possible.</p>
     </div>
     <div id="other" class="content-item">
       <div class="subheader">Other</div>
       <ul>
         <li><b>Acknowledgements:</b> Thank you to Jessica Creighton for the FRCture documentation, to Alex Spataru for his work on LibDS,
-           and to the Game Technology Group at Sun Microsystems for JInput.</li>
-        <li><b>Contact:</b> cmo93003@yahoo.com</li>
+           and to the Game Technology Group at Sun Microsystems for JInput.
+           Special thanks to <a href="https://github.com/Boomaa23" target="_blank">@Boomaa23</a> for creating and open-sourcing
+           <a href="https://github.com/Boomaa23/open-ds" target="_blank">OpenDS</a>, the foundation this fork is built on.</li>
+        <li><b>Source:</b> <a href="https://github.com/horner/open-ds.ai" target="_blank">github.com/horner/open-ds.ai</a></li>
       </ul>
     </div>
 </div>

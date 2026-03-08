@@ -13,12 +13,12 @@ import java.util.Scanner;
 
 public class HeadlessController implements HeadlessJDEC {
     public static final String LOGO_ASCII = ""
-        + "   ____                   ____  _____\n"
-        + "  / __ \\____  ___  ____  / __ \\/ ___/\n"
-        + " / / / / __ \\/ _ \\/ __ \\/ / / /\\__ \\ \n"
-        + "/ /_/ / /_/ /  __/ / / / /_/ /___/ / \n"
-        + "\\____/ .___/\\___/_/ /_/_____//____/  \n"
-        + "    /_/                              \n";
+        + "   ____                   ____  _____         _ \n"
+        + "  / __ \\____  ___  ____  / __ \\/ ___/      (_)\n"
+        + " / / / / __ \\/ _ \\/ __ \\/ / / /\\__ \\  __  _ \n"
+        + "/ /_/ / /_/ /  __/ / / / /_/ /___/ / / / / /\n"
+        + "\\____/ .___/\\___/_/ /_/_____//____(_)_/ /_/ \n"
+        + "    /_/                                        \n";
     private static final Scanner inputScanner = new Scanner(System.in);
 
     static {
@@ -115,7 +115,7 @@ public class HeadlessController implements HeadlessJDEC {
         STATUS_TABLE.updateAll();
         MAIN_ACTIONS_TABLE.updateAll();
         System.out.println(LOGO_ASCII
-            + "by Boomaa23\n"
+            + "OpenDS.ai (fork of OpenDS by horner)\n"
             + "------------------\n\n"
             + "Status: \n"
             + STATUS_TABLE

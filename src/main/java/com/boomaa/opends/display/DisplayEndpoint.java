@@ -130,7 +130,7 @@ public class DisplayEndpoint implements MainJDEC {
 
     private static void checkForUpdates() {
         try {
-            HttpURLConnection connection = (HttpURLConnection) new URL("https://github.com/Boomaa23/open-ds/releases/latest").openConnection();
+            HttpURLConnection connection = (HttpURLConnection) new URL("https://github.com/horner/open-ds.ai/releases/latest").openConnection();
             connection.setConnectTimeout(1000);
             connection.setUseCaches(false);
             connection.setInstanceFollowRedirects(false);

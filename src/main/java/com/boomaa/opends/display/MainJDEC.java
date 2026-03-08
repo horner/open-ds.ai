@@ -27,8 +27,8 @@ public interface MainJDEC {
     JPanel TAB_CONTAINER = new JPanel(new GridBagLayout());
     JTabbedPane TAB = new JTabbedPane();
 
-    JLabel TITLE = new JLabel("OpenDS");
-    JLabel LINK = MainFrame.createLinkLabel("github.com/Boomaa23/open-ds");
+    JLabel TITLE = new JLabel("OpenDS.ai");
+    JLabel LINK = MainFrame.createLinkLabel("github.com/horner/open-ds.ai");
 
     HCheckBox IS_ENABLED = new HCheckBox("Enable");
     RSLIndicator RSL_INDICATOR = new RSLIndicator();

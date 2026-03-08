@@ -20,21 +20,21 @@ if (((Test-NetConnection "api.github.com" -Port 80 -InformationLevel "Quiet").Tc
     $found_jar = Get-Childitem -Path ./open*.jar;
     Write-Host "Could not detect an internet connection.";
     if ($found_jar) {
-        Write-Host "Found local open-ds installation.";
+        Write-Host "Found local OpenDS.ai installation.";
         $installed_java_ver = Get-Command java;
         if ($installed_java_ver -Match "java.exe") {
-            Write-Host "Java installation found. Running local open-ds copy."
+            Write-Host "Java installation found. Running local OpenDS.ai copy."
             Start-Process -WindowStyle Hidden java -ArgumentList '-jar', $found_jar;
         } else {
             Write-Host "No Java installation detected on the PATH.";
         }
     } else {
-        Write-Host "No open-ds installation found. Exiting.";
+        Write-Host "No OpenDS.ai installation found. Exiting.";
     }
     exit
 }
 
-$gh_url = "https://api.github.com/repos/Boomaa23/open-ds/releases/latest";
+$gh_url = "https://api.github.com/repos/horner/open-ds.ai/releases/latest";
 $gh_latest_release = Invoke-RestMethod -Uri $gh_url;
 $ods_jar_name = "open-ds-" + $gh_latest_release.tag_name + ".jar";
 $jre_loc = $pwd.Path + '/' + $dl_basename;
@@ -84,9 +84,9 @@ if (-Not($installed_java_ver -Match "java.exe")) {
     } else {
         Write-Host "Local copy of JRE $jre_ver located.";
     }
-    Write-Host "Running OpenDS from local JRE $jre_ver...`n"
+    Write-Host "Running OpenDS.ai from local JRE $jre_ver...`n"
     Start-Process -WindowStyle Hidden ($jre_loc + "/bin/java.exe") -ArgumentList '-jar', $ods_jar_name;
 } else {
-    Write-Host "Java installation detected on PATH. Running OpenDS...`n";
+    Write-Host "Java installation detected on PATH. Running OpenDS.ai...`n";
     Start-Process -WindowStyle Hidden java -ArgumentList '-jar', $ods_jar_name;
 }

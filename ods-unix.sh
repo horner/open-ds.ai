@@ -14,12 +14,12 @@ bash -c '(sleep 2; kill $$) & exec nc -z 1.1.1.1 80' &> /dev/null
 if [[ $? -ne 0 ]]; then
     ods_find=$(find . -maxdepth 1 -name 'open-ds*')
     if [[ -z $ods_ver && ! -z $ods_find ]]; then
-        echo "No internet connection but other OpenDS JAR version found."
+        echo "No internet connection but other OpenDS.ai JAR version found."
         if [[ $(which java) ]]; then
-            echo -e "Java installation detected on PATH. Running OpenDS...\n"
+            echo -e "Java installation detected on PATH. Running OpenDS.ai...\n"
             java -jar $ods_find
         elif [[ -d $dl_basename ]]; then
-            echo -e "Running OpenDS from local JRE $jre_ver...\n"
+            echo -e "Running OpenDS.ai from local JRE $jre_ver...\n"
             $dl_basename/bin/java -jar $ods_find
         else
             echo "No Java installation detected and no internet connection. Exiting."
@@ -30,7 +30,7 @@ if [[ $? -ne 0 ]]; then
     exit 0
 fi
 
-gh_latest_release=$(curl -s -m 2 "https://api.github.com/repos/Boomaa23/open-ds/releases/latest")
+gh_latest_release=$(curl -s -m 2 "https://api.github.com/repos/horner/open-ds.ai/releases/latest")
 ods_ver=$(echo -e "$gh_latest_release" | grep -m 1 "tag_name" | awk "{ print substr (\$0, 16, 6) }")
 ods_jar_name="open-ds-$ods_ver.jar"
 
@@ -96,9 +96,9 @@ if [[ ! $(which java) ]]; then
     else
         echo "Local copy of JRE $jre_ver located."
     fi
-    echo -e "Running OpenDS from local JRE $jre_ver...\n"
+    echo -e "Running OpenDS.ai from local JRE $jre_ver...\n"
     $dl_basename/bin/java -jar $ods_jar_name
 else
-    echo -e "Java installation detected on PATH. Running OpenDS...\n"
+    echo -e "Java installation detected on PATH. Running OpenDS.ai...\n"
     java -jar $ods_jar_name
 fi
