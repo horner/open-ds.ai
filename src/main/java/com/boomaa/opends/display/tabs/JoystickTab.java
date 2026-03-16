@@ -5,6 +5,7 @@ import com.boomaa.opends.display.elements.GBCPanelBuilder;
 import com.boomaa.opends.display.elements.HideableLabel;
 import com.boomaa.opends.display.frames.AutoOrderFrame;
 import com.boomaa.opends.display.frames.FrameBase;
+import com.boomaa.opends.display.frames.MainFrame;
 import com.boomaa.opends.display.frames.MessageBox;
 import com.boomaa.opends.display.frames.ReassignAxesFrame;
 import com.boomaa.opends.usb.Component;
@@ -71,6 +72,10 @@ public class JoystickTab extends TabBase {
             }
             HIDDevice device = EmbeddedJDEC.LIST.getSelectedValue();
             if (device != null) {
+                if (device == MainJDEC.VCTRL_TAB.getVirtualDevice()) {
+                    MainFrame.enterCompactMode();
+                    return;
+                }
                 Debug.println("Selected joystick: " + device);
                 EmbeddedJDEC.INDEX_SET.setEnabled(true);
                 EmbeddedJDEC.INDEX_SET.setText(String.valueOf(device.getIdx()));

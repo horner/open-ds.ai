@@ -1,6 +1,7 @@
 package com.boomaa.opends.display.tabs;
 
 import com.boomaa.opends.display.elements.GBCPanelBuilder;
+import com.boomaa.opends.display.frames.FrameBase;
 import com.boomaa.opends.usb.Component;
 import com.boomaa.opends.usb.ControlDevices;
 import com.boomaa.opends.usb.HIDDevice;
@@ -36,11 +37,11 @@ import javax.swing.border.TitledBorder;
  * like a real USB controller.
  *
  * Keyboard bindings:
- *   WASD / Arrow Keys  -> Left stick axes (X, Y)
+ *   WASD              -> Left stick axes (X, Y)
  *   IJKL              -> Right stick axes (Z, RY)
- *   Q / E             -> Left / Right triggers (RZ, RX)
- *   1-4               -> A, B, X, Y buttons
- *   5-6               -> LB, RB bumpers
+ *   Q / U             -> Left / Right triggers (RZ, RX)
+ *   Arrow Keys        -> A (down), B (right), X (left), Y (up)
+ *   E / O             -> LB, RB bumpers
  *   7-8               -> Back, Start
  *   T / G / F / H    -> D-Pad Up / Down / Left / Right
  *
@@ -97,14 +98,14 @@ public class VirtualControllerTab extends TabBase {
         });
         base.clone().setPos(0, 0, 4, 1).setFill(GridBagConstraints.NONE).build(enableCb);
 
-        // --- Left Stick (D-pad / WASD / Arrow Keys) ---
-        JPanel leftStickPanel = createStickPanel("Left Stick (WASD / Arrows)",
-            Component.Axis.X, Component.Axis.Y, true);
+        // --- Left Stick (WASD) ---
+        JPanel leftStickPanel = createStickPanel("Left Stick (WASD)",
+            Component.Axis.X, Component.Axis.Y, true, true);
         base.clone().setPos(0, 1, 2, 3).build(leftStickPanel);
 
         // --- Right Stick (IJKL) ---
         JPanel rightStickPanel = createStickPanel("Right Stick (IJKL)",
-            Component.Axis.Z, Component.Axis.RY, false);
+            Component.Axis.Z, Component.Axis.RY, false, true);
         base.clone().setPos(2, 1, 2, 3).build(rightStickPanel);
 
         // --- Triggers ---
@@ -117,7 +118,7 @@ public class VirtualControllerTab extends TabBase {
             .setFill(GridBagConstraints.HORIZONTAL);
 
         JButton ltBtn = makeHoldButton("LT (Q)");
-        JButton rtBtn = makeHoldButton("RT (E)");
+        JButton rtBtn = makeHoldButton("RT (U)");
         lblLT = new JLabel("0.00", SwingConstants.CENTER);
         lblRT = new JLabel("0.00", SwingConstants.CENTER);
 
@@ -127,7 +128,7 @@ public class VirtualControllerTab extends TabBase {
                           () -> { triggerRight = false; updateTriggers(); });
 
         keyToButton.put(KeyEvent.VK_Q, ltBtn);
-        keyToButton.put(KeyEvent.VK_E, rtBtn);
+        keyToButton.put(KeyEvent.VK_U, rtBtn);
 
         tBase.clone().setPos(0, 0, 1, 1).build(ltBtn);
         tBase.clone().setPos(1, 0, 1, 1).build(rtBtn);
@@ -139,12 +140,15 @@ public class VirtualControllerTab extends TabBase {
         // --- Gamepad Buttons ---
         JPanel buttonPanel = new JPanel(new GridBagLayout());
         buttonPanel.setBorder(BorderFactory.createTitledBorder(
-            BorderFactory.createEtchedBorder(), "Buttons (1-8)",
+            BorderFactory.createEtchedBorder(), "Buttons",
             TitledBorder.CENTER, TitledBorder.TOP));
         GBCPanelBuilder bBase = new GBCPanelBuilder(buttonPanel)
             .setInsets(new Insets(2, 3, 2, 3));
 
-        String[] btnLabels = {"A(1)", "B(2)", "X(3)", "Y(4)", "LB(5)", "RB(6)", "Back(7)", "Start(8)"};
+        String[] btnLabels = {"A(\u2193)", "B(\u2192)", "X(\u2190)", "Y(\u2191)",
+            "LB(E)", "RB(O)", "Back(7)", "Start(8)"};
+        int[] btnKeys = {KeyEvent.VK_DOWN, KeyEvent.VK_RIGHT, KeyEvent.VK_LEFT, KeyEvent.VK_UP,
+            KeyEvent.VK_E, KeyEvent.VK_O, KeyEvent.VK_7, KeyEvent.VK_8};
         Color[] btnColors = {
             new Color(0x4CAF50), new Color(0xF44336), new Color(0x2196F3), new Color(0xFFEB3B),
             null, null, null, null
@@ -158,7 +162,7 @@ public class VirtualControllerTab extends TabBase {
             setupHold(btn,
                 () -> { virtualCtrl.setButton(idx, true); },
                 () -> { virtualCtrl.setButton(idx, false); });
-            keyToButton.put(KeyEvent.VK_1 + i, btn);
+            keyToButton.put(btnKeys[i], btn);
             bBase.clone().setPos(i % 4, i / 4, 1, 1).build(btn);
         }
 
@@ -176,7 +180,7 @@ public class VirtualControllerTab extends TabBase {
         Debug.println("VirtualControllerTab configured");
     }
 
-    private JPanel createStickPanel(String title, Component.Axis xAxis, Component.Axis yAxis, boolean isLeft) {
+    private JPanel createStickPanel(String title, Component.Axis xAxis, Component.Axis yAxis, boolean isLeft, boolean showLabels) {
         JPanel panel = new JPanel(new GridBagLayout());
         panel.setBorder(BorderFactory.createTitledBorder(
             BorderFactory.createEtchedBorder(), title,
@@ -226,19 +230,17 @@ public class VirtualControllerTab extends TabBase {
         gb.clone().setPos(0, 1, 1, 1).build(leftBtn);
         gb.clone().setPos(1, 1, 1, 1).build(downBtn);
         gb.clone().setPos(2, 1, 1, 1).build(rightBtn);
-        gb.clone().setPos(0, 2, 1, 1).setFill(GridBagConstraints.NONE).build(xLabel);
-        gb.clone().setPos(2, 2, 1, 1).setFill(GridBagConstraints.NONE).build(yLabel);
+        if (showLabels) {
+            gb.clone().setPos(0, 2, 1, 1).setFill(GridBagConstraints.NONE).build(xLabel);
+            gb.clone().setPos(2, 2, 1, 1).setFill(GridBagConstraints.NONE).build(yLabel);
+        }
 
         // Register arrow buttons for keyboard highlighting
         if (isLeft) {
             keyToButton.put(KeyEvent.VK_W, upBtn);
-            keyToButton.put(KeyEvent.VK_UP, upBtn);
             keyToButton.put(KeyEvent.VK_S, downBtn);
-            keyToButton.put(KeyEvent.VK_DOWN, downBtn);
             keyToButton.put(KeyEvent.VK_A, leftBtn);
-            keyToButton.put(KeyEvent.VK_LEFT, leftBtn);
             keyToButton.put(KeyEvent.VK_D, rightBtn);
-            keyToButton.put(KeyEvent.VK_RIGHT, rightBtn);
         } else {
             keyToButton.put(KeyEvent.VK_I, upBtn);
             keyToButton.put(KeyEvent.VK_K, downBtn);
@@ -294,7 +296,7 @@ public class VirtualControllerTab extends TabBase {
     }
 
     private void setupKeyBindings() {
-        // Left stick: WASD + Arrow keys
+        // Left stick: WASD
         bindKey(KeyEvent.VK_W,     () -> { leftUp = true; updateLeftStick(); },
                                    () -> { leftUp = false; updateLeftStick(); });
         bindKey(KeyEvent.VK_S,     () -> { leftDown = true; updateLeftStick(); },
@@ -302,14 +304,6 @@ public class VirtualControllerTab extends TabBase {
         bindKey(KeyEvent.VK_A,     () -> { leftLeft = true; updateLeftStick(); },
                                    () -> { leftLeft = false; updateLeftStick(); });
         bindKey(KeyEvent.VK_D,     () -> { leftRight = true; updateLeftStick(); },
-                                   () -> { leftRight = false; updateLeftStick(); });
-        bindKey(KeyEvent.VK_UP,    () -> { leftUp = true; updateLeftStick(); },
-                                   () -> { leftUp = false; updateLeftStick(); });
-        bindKey(KeyEvent.VK_DOWN,  () -> { leftDown = true; updateLeftStick(); },
-                                   () -> { leftDown = false; updateLeftStick(); });
-        bindKey(KeyEvent.VK_LEFT,  () -> { leftLeft = true; updateLeftStick(); },
-                                   () -> { leftLeft = false; updateLeftStick(); });
-        bindKey(KeyEvent.VK_RIGHT, () -> { leftRight = true; updateLeftStick(); },
                                    () -> { leftRight = false; updateLeftStick(); });
 
         // Right stick: IJKL
@@ -322,19 +316,37 @@ public class VirtualControllerTab extends TabBase {
         bindKey(KeyEvent.VK_L, () -> { rightRight = true; updateRightStick(); },
                                () -> { rightRight = false; updateRightStick(); });
 
-        // Triggers: Q (left), E (right)
+        // Triggers: Q (left), U (right)
         bindKey(KeyEvent.VK_Q, () -> { triggerLeft = true; updateTriggers(); },
                                () -> { triggerLeft = false; updateTriggers(); });
-        bindKey(KeyEvent.VK_E, () -> { triggerRight = true; updateTriggers(); },
+        bindKey(KeyEvent.VK_U, () -> { triggerRight = true; updateTriggers(); },
                                () -> { triggerRight = false; updateTriggers(); });
 
-        // Buttons: number keys 1-8
-        for (int i = 0; i < 8; i++) {
-            final int idx = i;
-            bindKey(KeyEvent.VK_1 + i,
-                () -> virtualCtrl.setButton(idx, true),
-                () -> virtualCtrl.setButton(idx, false));
-        }
+        // Buttons: arrow keys for ABXY, E/O for bumpers, 7-8 for Bk/St
+        bindKey(KeyEvent.VK_DOWN,
+            () -> virtualCtrl.setButton(0, true),
+            () -> virtualCtrl.setButton(0, false));
+        bindKey(KeyEvent.VK_RIGHT,
+            () -> virtualCtrl.setButton(1, true),
+            () -> virtualCtrl.setButton(1, false));
+        bindKey(KeyEvent.VK_LEFT,
+            () -> virtualCtrl.setButton(2, true),
+            () -> virtualCtrl.setButton(2, false));
+        bindKey(KeyEvent.VK_UP,
+            () -> virtualCtrl.setButton(3, true),
+            () -> virtualCtrl.setButton(3, false));
+        bindKey(KeyEvent.VK_E,
+            () -> virtualCtrl.setButton(4, true),
+            () -> virtualCtrl.setButton(4, false));
+        bindKey(KeyEvent.VK_O,
+            () -> virtualCtrl.setButton(5, true),
+            () -> virtualCtrl.setButton(5, false));
+        bindKey(KeyEvent.VK_7,
+            () -> virtualCtrl.setButton(6, true),
+            () -> virtualCtrl.setButton(6, false));
+        bindKey(KeyEvent.VK_8,
+            () -> virtualCtrl.setButton(7, true),
+            () -> virtualCtrl.setButton(7, false));
 
         // D-Pad POV hat: T (up), G (down), F (left), H (right)
         bindKey(KeyEvent.VK_T,
@@ -467,6 +479,13 @@ public class VirtualControllerTab extends TabBase {
         return btn;
     }
 
+    private JButton makeCompactButton(String text) {
+        JButton btn = new JButton(text);
+        btn.setFocusable(false);
+        btn.setMargin(new Insets(1, 2, 1, 2));
+        return btn;
+    }
+
     private void setupHold(JButton btn, Runnable onPress, Runnable onRelease) {
         btn.addMouseListener(new MouseAdapter() {
             @Override
@@ -479,5 +498,255 @@ public class VirtualControllerTab extends TabBase {
                 onRelease.run();
             }
         });
+    }
+
+    public HIDDevice getVirtualDevice() {
+        return virtualDevice;
+    }
+
+    /**
+     * Switch between the full vertical layout (compact=false, normal tab view)
+     * and a compact horizontal layout (compact=true) suitable for a ~185 px tall
+     * combined control strip. All five sections (Left Stick, Right Stick,
+     * Triggers, Buttons, D-Pad) are placed in a single row.
+     */
+    public void setCompact(boolean compact) {
+        removeAll();
+        keyToButton = new HashMap<>();
+        // Axis/button state flags are preserved across layout changes.
+
+        setLayout(new GridBagLayout());
+        if (compact) {
+            setPreferredSize(null);
+            GBCPanelBuilder base = new GBCPanelBuilder(this)
+                .setFill(GridBagConstraints.BOTH)
+                .setAnchor(GridBagConstraints.CENTER)
+                .setInsets(new Insets(0, 1, 0, 1));
+
+            // --- D-Pad (leftmost) ---
+            JPanel dpadPanel = createDpadPanel();
+
+            // --- Bumpers + Triggers + Sticks ---
+            // LB / RB buttons
+            JButton lbBtn = makeCompactButton("LB(E)");
+            JButton rbBtn = makeCompactButton("RB(O)");
+            setupHold(lbBtn,
+                () -> virtualCtrl.setButton(4, true),
+                () -> virtualCtrl.setButton(4, false));
+            setupHold(rbBtn,
+                () -> virtualCtrl.setButton(5, true),
+                () -> virtualCtrl.setButton(5, false));
+            keyToButton.put(KeyEvent.VK_E, lbBtn);
+            keyToButton.put(KeyEvent.VK_O, rbBtn);
+
+            // LT / RT trigger buttons (small)
+            JButton ltBtn = makeCompactButton("LT(Q)");
+            JButton rtBtn = makeCompactButton("RT(U)");
+            lblLT = new JLabel("", SwingConstants.CENTER);
+            lblRT = new JLabel("", SwingConstants.CENTER);
+            setupHold(ltBtn, () -> {
+                triggerLeft = true;
+                updateTriggers();
+            }, () -> {
+                triggerLeft = false;
+                updateTriggers();
+            });
+            setupHold(rtBtn, () -> {
+                triggerRight = true;
+                updateTriggers();
+            }, () -> {
+                triggerRight = false;
+                updateTriggers();
+            });
+            keyToButton.put(KeyEvent.VK_Q, ltBtn);
+            keyToButton.put(KeyEvent.VK_U, rtBtn);
+
+            // Left stick cross-pad
+            JPanel leftStickPanel = createStickPanel("L Stick (WASD)",
+                Component.Axis.X, Component.Axis.Y, true, false);
+            // Right stick cross-pad
+            JPanel rightStickPanel = createStickPanel("R Stick (IJKL)",
+                Component.Axis.Z, Component.Axis.RY, false, false);
+
+            // Left column: LB -> LT -> Left Stick (vertical)
+            JPanel leftCol = new JPanel(new GridBagLayout());
+            GBCPanelBuilder lc = new GBCPanelBuilder(leftCol)
+                .setFill(GridBagConstraints.BOTH)
+                .setInsets(new Insets(0, 0, 0, 0));
+            lc.clone().setPos(0, 0, 1, 1).setWeightX(1.0).setWeightY(0.0).build(lbBtn);
+            lc.clone().setPos(0, 1, 1, 1).setWeightX(1.0).setWeightY(0.0).build(ltBtn);
+            lc.clone().setPos(0, 2, 1, 1).setWeightX(1.0).setWeightY(1.0).build(leftStickPanel);
+
+            // Right column: RB -> RT -> Right Stick (vertical)
+            JPanel rightCol = new JPanel(new GridBagLayout());
+            GBCPanelBuilder rc = new GBCPanelBuilder(rightCol)
+                .setFill(GridBagConstraints.BOTH)
+                .setInsets(new Insets(0, 0, 0, 0));
+            rc.clone().setPos(0, 0, 1, 1).setWeightX(1.0).setWeightY(0.0).build(rbBtn);
+            rc.clone().setPos(0, 1, 1, 1).setWeightX(1.0).setWeightY(0.0).build(rtBtn);
+            rc.clone().setPos(0, 2, 1, 1).setWeightX(1.0).setWeightY(1.0).build(rightStickPanel);
+
+            // --- Face buttons: ABXY diamond + Bk/St ---
+            JPanel facePanel = new JPanel(new GridBagLayout());
+            GBCPanelBuilder fb = new GBCPanelBuilder(facePanel)
+                .setFill(GridBagConstraints.NONE)
+                .setAnchor(GridBagConstraints.CENTER)
+                .setInsets(new Insets(0, 0, 0, 0));
+
+            // ABXY in diamond: Y top, X left, B right, A bottom
+            JButton btnY = makeCompactButton("Y(\u2191)");
+            btnY.setForeground(new Color(0xFFEB3B));
+            JButton btnX = makeCompactButton("X(\u2190)");
+            btnX.setForeground(new Color(0x2196F3));
+            JButton btnB = makeCompactButton("B(\u2192)");
+            btnB.setForeground(new Color(0xF44336));
+            JButton btnA = makeCompactButton("A(\u2193)");
+            btnA.setForeground(new Color(0x4CAF50));
+            setupHold(btnA,
+                () -> virtualCtrl.setButton(0, true),
+                () -> virtualCtrl.setButton(0, false));
+            setupHold(btnB,
+                () -> virtualCtrl.setButton(1, true),
+                () -> virtualCtrl.setButton(1, false));
+            setupHold(btnX,
+                () -> virtualCtrl.setButton(2, true),
+                () -> virtualCtrl.setButton(2, false));
+            setupHold(btnY,
+                () -> virtualCtrl.setButton(3, true),
+                () -> virtualCtrl.setButton(3, false));
+            keyToButton.put(KeyEvent.VK_DOWN, btnA);
+            keyToButton.put(KeyEvent.VK_RIGHT, btnB);
+            keyToButton.put(KeyEvent.VK_LEFT, btnX);
+            keyToButton.put(KeyEvent.VK_UP, btnY);
+
+            //       [Y]
+            //  [X]       [B]
+            //       [A]
+            fb.clone().setPos(1, 0, 1, 1).build(btnY);
+            fb.clone().setPos(0, 1, 1, 1).build(btnX);
+            fb.clone().setPos(2, 1, 1, 1).build(btnB);
+            fb.clone().setPos(1, 2, 1, 1).build(btnA);
+
+            // Bk / St below diamond
+            JButton bkBtn = makeCompactButton("Bk(7)");
+            JButton stBtn = makeCompactButton("St(8)");
+            setupHold(bkBtn,
+                () -> virtualCtrl.setButton(6, true),
+                () -> virtualCtrl.setButton(6, false));
+            setupHold(stBtn,
+                () -> virtualCtrl.setButton(7, true),
+                () -> virtualCtrl.setButton(7, false));
+            keyToButton.put(KeyEvent.VK_7, bkBtn);
+            keyToButton.put(KeyEvent.VK_8, stBtn);
+            fb.clone().setPos(0, 3, 1, 1).build(bkBtn);
+            fb.clone().setPos(2, 3, 1, 1).build(stBtn);
+
+            // Top-level columns: DPad | Left | Right | Face
+            base.clone().setPos(0, 0, 1, 1).setWeightX(0.8).setWeightY(1.0)
+                .setFill(GridBagConstraints.HORIZONTAL)
+                .setAnchor(GridBagConstraints.NORTH).build(dpadPanel);
+            base.clone().setPos(1, 0, 1, 1).setWeightX(1.0).setWeightY(1.0)
+                .setFill(GridBagConstraints.HORIZONTAL)
+                .setAnchor(GridBagConstraints.NORTH).build(leftCol);
+            base.clone().setPos(2, 0, 1, 1).setWeightX(1.0).setWeightY(1.0)
+                .setFill(GridBagConstraints.HORIZONTAL)
+                .setAnchor(GridBagConstraints.NORTH).build(rightCol);
+            base.clone().setPos(3, 0, 1, 1).setWeightX(2).setWeightY(1.0)
+                .setFill(GridBagConstraints.HORIZONTAL)
+                .setAnchor(GridBagConstraints.NORTH).build(facePanel);
+        } else {
+            Dimension fullSize = new Dimension(520, 360);
+            FrameBase.applyNonWindowsScaling(fullSize);
+            setPreferredSize(fullSize);
+            GBCPanelBuilder base = new GBCPanelBuilder(this)
+                .setFill(GridBagConstraints.BOTH)
+                .setAnchor(GridBagConstraints.CENTER)
+                .setInsets(new Insets(4, 4, 4, 4));
+
+            JCheckBox enableCb = new JCheckBox("Enable Virtual Gamepad", true);
+            enableCb.addItemListener(e -> {
+                boolean sel = enableCb.isSelected();
+                virtualDevice.setDisabled(!sel);
+                Debug.println("Virtual gamepad " + (sel ? "enabled" : "disabled"));
+            });
+            base.clone().setPos(0, 0, 4, 1).setFill(GridBagConstraints.NONE).build(enableCb);
+
+            JPanel leftStickPanel = createStickPanel("Left Stick (WASD)",
+                Component.Axis.X, Component.Axis.Y, true, true);
+            base.clone().setPos(0, 1, 2, 3).build(leftStickPanel);
+
+            JPanel rightStickPanel = createStickPanel("Right Stick (IJKL)",
+                Component.Axis.Z, Component.Axis.RY, false, true);
+            base.clone().setPos(2, 1, 2, 3).build(rightStickPanel);
+
+            JPanel triggerPanel = new JPanel(new GridBagLayout());
+            triggerPanel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createEtchedBorder(), "Triggers",
+                TitledBorder.CENTER, TitledBorder.TOP));
+            GBCPanelBuilder tBase = new GBCPanelBuilder(triggerPanel)
+                .setInsets(new Insets(2, 4, 2, 4))
+                .setFill(GridBagConstraints.HORIZONTAL);
+            JButton ltBtn = makeHoldButton("LT (Q)");
+            JButton rtBtn = makeHoldButton("RT (U)");
+            lblLT = new JLabel("0.00", SwingConstants.CENTER);
+            lblRT = new JLabel("0.00", SwingConstants.CENTER);
+            setupHold(ltBtn, () -> {
+                triggerLeft = true;
+                updateTriggers();
+            }, () -> {
+                triggerLeft = false;
+                updateTriggers();
+            });
+            setupHold(rtBtn, () -> {
+                triggerRight = true;
+                updateTriggers();
+            }, () -> {
+                triggerRight = false;
+                updateTriggers();
+            });
+            keyToButton.put(KeyEvent.VK_Q, ltBtn);
+            keyToButton.put(KeyEvent.VK_U, rtBtn);
+            tBase.clone().setPos(0, 0, 1, 1).build(ltBtn);
+            tBase.clone().setPos(1, 0, 1, 1).build(rtBtn);
+            tBase.clone().setPos(0, 1, 1, 1).setFill(GridBagConstraints.NONE).build(lblLT);
+            tBase.clone().setPos(1, 1, 1, 1).setFill(GridBagConstraints.NONE).build(lblRT);
+            base.clone().setPos(0, 4, 2, 1).build(triggerPanel);
+
+            JPanel buttonPanel = new JPanel(new GridBagLayout());
+            buttonPanel.setBorder(BorderFactory.createTitledBorder(
+                BorderFactory.createEtchedBorder(), "Buttons",
+                TitledBorder.CENTER, TitledBorder.TOP));
+            GBCPanelBuilder bBase = new GBCPanelBuilder(buttonPanel)
+                .setInsets(new Insets(2, 3, 2, 3));
+            String[] btnLabels2 = {"A(\u2193)", "B(\u2192)", "X(\u2190)", "Y(\u2191)",
+                "LB(E)", "RB(O)", "Back(7)", "Start(8)"};
+            int[] btnKeys2 = {KeyEvent.VK_DOWN, KeyEvent.VK_RIGHT, KeyEvent.VK_LEFT, KeyEvent.VK_UP,
+                KeyEvent.VK_E, KeyEvent.VK_O, KeyEvent.VK_7, KeyEvent.VK_8};
+            Color[] btnColors2 = {
+                new Color(0x4CAF50), new Color(0xF44336), new Color(0x2196F3), new Color(0xFFEB3B),
+                null, null, null, null
+            };
+            for (int i = 0; i < btnLabels2.length; i++) {
+                JButton btn = makeHoldButton(btnLabels2[i]);
+                if (btnColors2[i] != null) {
+                    btn.setForeground(btnColors2[i]);
+                }
+                final int idx = i;
+                setupHold(btn,
+                    () -> virtualCtrl.setButton(idx, true),
+                    () -> virtualCtrl.setButton(idx, false));
+                keyToButton.put(btnKeys2[i], btn);
+                bBase.clone().setPos(i % 4, i / 4, 1, 1).build(btn);
+            }
+            base.clone().setPos(2, 4, 2, 2).build(buttonPanel);
+
+            JPanel dpadPanel = createDpadPanel();
+            base.clone().setPos(0, 5, 2, 1).build(dpadPanel);
+        }
+
+        setupKeyBindings();
+        installKeyBindings();
+        revalidate();
+        repaint();
     }
 }

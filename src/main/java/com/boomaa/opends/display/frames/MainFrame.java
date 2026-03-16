@@ -2,6 +2,7 @@ package com.boomaa.opends.display.frames;
 
 import com.boomaa.opends.display.DisplayEndpoint;
 import com.boomaa.opends.display.GlobalKeyListener;
+import com.boomaa.opends.display.Logger;
 import com.boomaa.opends.display.MainJDEC;
 import com.boomaa.opends.display.MultiKeyEvent;
 import com.boomaa.opends.display.RobotMode;
@@ -9,7 +10,9 @@ import com.boomaa.opends.display.StdRedirect;
 import com.boomaa.opends.display.TeamNumListener;
 import com.boomaa.opends.display.TeamNumPersist;
 import com.boomaa.opends.display.elements.GBCPanelBuilder;
+import com.boomaa.opends.display.tabs.TabBase;
 import com.boomaa.opends.display.tabs.TabChangeListener;
+import com.boomaa.opends.display.tabs.VirtualControllerTab;
 import com.boomaa.opends.util.Debug;
 import com.boomaa.opends.util.OperatingSystem;
 import com.boomaa.opends.util.Parameter;
@@ -17,6 +20,8 @@ import com.github.kwhat.jnativehook.GlobalScreen;
 import com.github.kwhat.jnativehook.NativeHookException;
 import com.github.kwhat.jnativehook.keyboard.NativeKeyEvent;
 
+import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Component;
 import java.awt.Container;
 import java.awt.Desktop;
@@ -35,10 +40,14 @@ import java.awt.event.MouseEvent;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
 import javax.swing.SwingWorker;
 import javax.swing.UIManager;
@@ -54,6 +63,13 @@ public class MainFrame implements MainJDEC {
         .setInsets(new Insets(5, 5, 5, 5))
         .setFill(GridBagConstraints.BOTH)
         .setAnchor(GridBagConstraints.CENTER);
+
+    private static final Map<Component, GridBagConstraints> savedGBC = new HashMap<>();
+    private static Dimension savedFrameSize;
+    private static Dimension savedLogPaneSize;
+    private static boolean compactMode = false;
+    private static final JPanel ROOT = new JPanel(new CardLayout());
+    private static CompactDSPanel COMPACT_PANEL = null;
 
     private MainFrame() {
     }
@@ -114,6 +130,7 @@ public class MainFrame implements MainJDEC {
             Debug.println("Protocol year changed to: " + MainJDEC.getProtocolYear());
         }));
         TAB.addChangeListener(TabChangeListener.getInstance());
+        TabChangeListener.getInstance().addAction("Virtual Gamepad", MainFrame::enterCompactMode);
 
         IS_ENABLED.addItemListener((e) -> RSL_INDICATOR.setFlashing(e.getStateChange() == ItemEvent.SELECTED));
 
@@ -189,7 +206,8 @@ public class MainFrame implements MainJDEC {
         TAB.addTab("Shuffleboard", NT_TAB);
         TAB.addTab("Statistics", STATS_TAB);
         TAB.addTab("Log", LOG_TAB);
-        FRAME.add(TAB);
+        ROOT.add(TAB, "FULL");
+        FRAME.add(ROOT);
         Debug.println("Swing tabs added to frame");
 
         Dimension dimension = new Dimension(560, 390);
@@ -287,5 +305,139 @@ public class MainFrame implements MainJDEC {
             }
         });
         return href;
+    }
+
+    public static void enterCompactMode() {
+        if (compactMode) {
+            return;
+        }
+        SwingUtilities.invokeLater(() -> {
+            savedFrameSize = FRAME.getElement().getSize();
+
+            if (COMPACT_PANEL == null) {
+                COMPACT_PANEL = new CompactDSPanel();
+                ROOT.add(COMPACT_PANEL, "COMPACT");
+            }
+            COMPACT_PANEL.controlStrip.removeAll();
+
+            GridBagLayout tbl = (GridBagLayout) TAB_CONTAINER.getLayout();
+            GBCPanelBuilder csb = new GBCPanelBuilder(COMPACT_PANEL.controlStrip)
+                .setInsets(new Insets(1, 3, 1, 3))
+                .setFill(GridBagConstraints.BOTH)
+                .setAnchor(GridBagConstraints.WEST);
+
+            moveToCompactStrip(csb, tbl, ROBOT_DRIVE_MODE.getElement(), 0, 0, 2, 1);
+            moveToCompactStrip(csb, tbl, IS_ENABLED.getElement(), 0, 1, 2, 1);
+            moveToCompactStrip(csb, tbl, BAT_VOLTAGE, 0, 2, 2, 1);
+            moveToCompactStrip(csb, tbl, ROBOT_CONNECTION_STATUS, 0, 3, 2, 1);
+            moveToCompactStrip(csb, tbl, ROBOT_CODE_STATUS, 0, 4, 2, 1);
+            moveToCompactStrip(csb, tbl, MATCH_TIME, 0, 5, 2, 1);
+            moveToCompactStrip(csb, tbl, ALLIANCE_NUM.getElement(), 0, 6, 1, 1);
+            moveToCompactStrip(csb, tbl, ALLIANCE_COLOR.getElement(), 1, 6, 1, 1);
+
+            JButton fullViewBtn = new JButton("◄ Full View");
+            fullViewBtn.setFocusable(false);
+            fullViewBtn.addActionListener(e -> exitCompactMode());
+            csb.clone().setPos(0, 7, 2, 1).setFill(GridBagConstraints.HORIZONTAL).build(fullViewBtn);
+            JPanel csGlue = new JPanel();
+            csGlue.setOpaque(false);
+            csb.clone().setPos(0, 8, 2, 1).setWeightY(1.0).build(csGlue);
+
+            TAB_CONTAINER.revalidate();
+            TAB_CONTAINER.repaint();
+
+            for (int i = 0; i < TAB.getTabCount(); i++) {
+                if ("Virtual Gamepad".equals(TAB.getTitleAt(i))) {
+                    TAB.removeTabAt(i);
+                    break;
+                }
+            }
+            VCTRL_TAB.setCompact(true);
+            COMPACT_PANEL.centerPanel.removeAll();
+            COMPACT_PANEL.centerPanel.add(VCTRL_TAB, BorderLayout.CENTER);
+
+            savedLogPaneSize = Logger.PANE.getPreferredSize();
+            LOG_TAB.remove(Logger.PANE);
+            Dimension logSize = new Dimension(240, 155);
+            Logger.PANE.setPreferredSize(logSize);
+            Logger.PANE.setMaximumSize(logSize);
+            COMPACT_PANEL.rightPanel.removeAll();
+            COMPACT_PANEL.rightPanel.add(Logger.PANE, BorderLayout.NORTH);
+
+            TabBase.setVisible(VirtualControllerTab.class);
+
+            ((CardLayout) ROOT.getLayout()).show(ROOT, "COMPACT");
+            Dimension compactSize = new Dimension(1150, 195);
+            FrameBase.applyNonWindowsScaling(compactSize);
+            FRAME.getElement().setSize(compactSize);
+            FRAME.setLocationRelativeTo(null);
+            compactMode = true;
+            Debug.println("Entered compact DS view");
+        });
+    }
+
+    public static void exitCompactMode() {
+        if (!compactMode) {
+            return;
+        }
+        SwingUtilities.invokeLater(() -> {
+            COMPACT_PANEL.controlStrip.removeAll();
+            GridBagLayout tbl = (GridBagLayout) TAB_CONTAINER.getLayout();
+            restoreToTabContainer(tbl, ROBOT_DRIVE_MODE.getElement());
+            restoreToTabContainer(tbl, IS_ENABLED.getElement());
+            restoreToTabContainer(tbl, BAT_VOLTAGE);
+            restoreToTabContainer(tbl, ROBOT_CONNECTION_STATUS);
+            restoreToTabContainer(tbl, ROBOT_CODE_STATUS);
+            restoreToTabContainer(tbl, MATCH_TIME);
+            restoreToTabContainer(tbl, ALLIANCE_NUM.getElement());
+            restoreToTabContainer(tbl, ALLIANCE_COLOR.getElement());
+            TAB_CONTAINER.revalidate();
+            TAB_CONTAINER.repaint();
+
+            COMPACT_PANEL.centerPanel.removeAll();
+            VCTRL_TAB.setCompact(false);
+            TAB.insertTab("Virtual Gamepad", null, VCTRL_TAB, null, 2);
+
+            COMPACT_PANEL.rightPanel.removeAll();
+            Logger.PANE.setPreferredSize(savedLogPaneSize);
+            Logger.PANE.setMaximumSize(null);
+            LOG_TAB.add(Logger.PANE);
+            LOG_TAB.revalidate();
+
+            ((CardLayout) ROOT.getLayout()).show(ROOT, "FULL");
+            TAB.setSelectedComponent(TAB_CONTAINER);
+            FRAME.getElement().setSize(savedFrameSize);
+            FRAME.setLocationRelativeTo(null);
+            compactMode = false;
+            Debug.println("Exited compact DS view");
+        });
+    }
+
+    private static void moveToCompactStrip(GBCPanelBuilder csb, GridBagLayout tbl,
+        Component comp, int gx, int gy, int gw, int gh) {
+        savedGBC.put(comp, tbl.getConstraints(comp));
+        TAB_CONTAINER.remove(comp);
+        csb.clone().setPos(gx, gy, gw, gh).build(comp);
+    }
+
+    private static void restoreToTabContainer(GridBagLayout tbl, Component comp) {
+        GridBagConstraints saved = savedGBC.get(comp);
+        if (saved != null) {
+            tbl.setConstraints(comp, saved);
+            TAB_CONTAINER.add(comp);
+        }
+    }
+
+    private static class CompactDSPanel extends JPanel {
+        final JPanel controlStrip = new JPanel(new GridBagLayout());
+        final JPanel centerPanel = new JPanel(new BorderLayout());
+        final JPanel rightPanel = new JPanel(new BorderLayout());
+
+        CompactDSPanel() {
+            super(new BorderLayout(4, 0));
+            add(controlStrip, BorderLayout.WEST);
+            add(centerPanel, BorderLayout.CENTER);
+            add(rightPanel, BorderLayout.EAST);
+        }
     }
 }
