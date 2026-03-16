@@ -35,6 +35,7 @@ import java.util.logging.Logger;
 
 public class DisplayEndpoint implements MainJDEC {
     public static final String CURRENT_VERSION_TAG = "v0.3.1";
+    private static final String RELEASES_LATEST_URL = "https://github.com/Boomaa23/open-ds/releases/latest";
 
     public static final int DEFAULT_MCP_PORT = 8765;
 
@@ -130,7 +131,7 @@ public class DisplayEndpoint implements MainJDEC {
 
     private static void checkForUpdates() {
         try {
-            HttpURLConnection connection = (HttpURLConnection) new URL("https://github.com/horner/open-ds.ai/releases/latest").openConnection();
+            HttpURLConnection connection = (HttpURLConnection) new URL(RELEASES_LATEST_URL).openConnection();
             connection.setConnectTimeout(1000);
             connection.setUseCaches(false);
             connection.setInstanceFollowRedirects(false);
@@ -139,6 +140,9 @@ public class DisplayEndpoint implements MainJDEC {
                 case HttpURLConnection.HTTP_MOVED_TEMP:
                 case HttpURLConnection.HTTP_SEE_OTHER:
                     String redirect = connection.getHeaderField("Location");
+                    if (redirect == null || !redirect.contains("/releases/tag/")) {
+                        break;
+                    }
                     String remoteVer = redirect.substring(redirect.lastIndexOf("/") + 1);
                     if (!remoteVer.equals(CURRENT_VERSION_TAG)) {
                         new HyperlinkBox(String.format("A new version %s is available! Download from <br /><a href=\"%s\">%s</a>",
